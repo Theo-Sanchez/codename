@@ -9,7 +9,7 @@ NUMBER_OF_WORDS = 25
 def get_random_words() -> list:
     """ read from json list of words and pseudo randomly return 25 of them
     """
-    with open(f"{os.getcwd()}/wordsList.json", "r", encoding='utf-8') as f:
+    with open(f"{os.getcwd()}/backend/wordsList.json", "r", encoding='utf-8') as f:
         words_list = json.load(f)
 
     guess_list = []

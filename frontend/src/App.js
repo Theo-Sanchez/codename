@@ -1,6 +1,6 @@
 import './App.css';
 import Card from './components/Card';
-import useSocket from './useSocket';
+import useSocket from './hooks/useSocket';
 import React, {useState} from 'react';
 
 const grid = [

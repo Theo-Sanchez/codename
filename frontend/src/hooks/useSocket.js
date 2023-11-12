@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import socketIOClient from "socket.io-client";
 
-const EMIT_EVENT = "sent_event";
-const LISTENER_EVENT = "received_event";
+const EMIT_EVENT = "from_client";
+const LISTENER_EVENT = "from_server";
 const ENDPOINT = "http://localhost:5000";
 
 const useSocket = () => {
@@ -15,13 +15,12 @@ const useSocket = () => {
     socketRef.current.emit("join"); // connect
 
     socketRef.current.on("log", (event) => {
-      console.log("test_receive_event", event)
       setRole(event.role);
       setGameGrid(event.grid);
     });
 
-    socketRef.current.on(LISTENER_EVENT, (newGrid) => {
-      console.log("test_receive_event", newGrid)
+    socketRef.current.on(LISTENER_EVENT, (event) => {
+      console.log("test_receive_event", event.grid)
       setGameGrid(newGrid);
     });
 
