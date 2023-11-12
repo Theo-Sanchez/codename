@@ -1,4 +1,5 @@
 import random
+import json
 
 def get_random_words() -> list:
     return [
@@ -24,23 +25,5 @@ def init_grid(size: int=5) -> list:
         "color": elem,
     } for i, elem in enumerate(color_list)]
 
-
-def handle_grid(grid: list, position: tuple, player_color: str, score: dict) -> tuple:
-
-    # enemy_color = "red" if player_color == "blue" else "blue"
-    x = position[0]
-    y = position[1]
-    case = grid[x*5 + y]
-    match = False
-    if (case.get("color")) == player_color:
-        score[player_color] += 1
-        match = True
-    # elif case.get("color") == enemy_color :
-    #     print("mistaken")
-    elif case.get("color") == "black":
-        print('game should end') 
-    else:
-        print('should be white case or enemy coloured')
-
-    case.update({"discovered": True})
-    return grid, match
+with open("tmp.json", 'w', encoding="utf-8") as f:
+    f.write(json.dumps(init_grid(), ensure_ascii=False, indent=2))

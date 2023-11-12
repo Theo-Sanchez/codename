@@ -1,0 +1,127 @@
+[
+  {
+    "discovered": false,
+    "word": "a1",
+    "color": "red"
+  },
+  {
+    "discovered": false,
+    "word": "b1",
+    "color": "white"
+  },
+  {
+    "discovered": false,
+    "word": "c1",
+    "color": "white"
+  },
+  {
+    "discovered": false,
+    "word": "d1",
+    "color": "red"
+  },
+  {
+    "discovered": false,
+    "word": "e1",
+    "color": "blue"
+  },
+  {
+    "discovered": false,
+    "word": "a2",
+    "color": "blue"
+  },
+  {
+    "discovered": false,
+    "word": "b2",
+    "color": "red"
+  },
+  {
+    "discovered": false,
+    "word": "c2",
+    "color": "red"
+  },
+  {
+    "discovered": false,
+    "word": "d2",
+    "color": "white"
+  },
+  {
+    "discovered": false,
+    "word": "e2",
+    "color": "red"
+  },
+  {
+    "discovered": false,
+    "word": "a3",
+    "color": "white"
+  },
+  {
+    "discovered": false,
+    "word": "b3",
+    "color": "blue"
+  },
+  {
+    "discovered": false,
+    "word": "c3",
+    "color": "blue"
+  },
+  {
+    "discovered": false,
+    "word": "d3",
+    "color": "blue"
+  },
+  {
+    "discovered": false,
+    "word": "e3",
+    "color": "blue"
+  },
+  {
+    "discovered": false,
+    "word": "a4",
+    "color": "white"
+  },
+  {
+    "discovered": false,
+    "word": "b4",
+    "color": "red"
+  },
+  {
+    "discovered": false,
+    "word": "c4",
+    "color": "red"
+  },
+  {
+    "discovered": false,
+    "word": "d4",
+    "color": "white"
+  },
+  {
+    "discovered": false,
+    "word": "e4",
+    "color": "white"
+  },
+  {
+    "discovered": false,
+    "word": "a5",
+    "color": "blue"
+  },
+  {
+    "discovered": false,
+    "word": "b5",
+    "color": "red"
+  },
+  {
+    "discovered": false,
+    "word": "c5",
+    "color": "white"
+  },
+  {
+    "discovered": false,
+    "word": "d5",
+    "color": "black"
+  },
+  {
+    "discovered": false,
+    "word": "e5",
+    "color": "blue"
+  }
+]

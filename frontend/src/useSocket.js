@@ -14,9 +14,10 @@ const useSocket = () => {
     socketRef.current = socketIOClient(ENDPOINT);
     socketRef.current.emit("join"); // connect
 
-    socketRef.current.on("log", (newGrid) => {
-      console.log("test_receive_event", newGrid)
-      setGameGrid(newGrid);
+    socketRef.current.on("log", (event) => {
+      console.log("test_receive_event", event)
+      setRole(event.role);
+      setGameGrid(event.grid);
     });
 
     socketRef.current.on(LISTENER_EVENT, (newGrid) => {
