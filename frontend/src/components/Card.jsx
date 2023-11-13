@@ -1,21 +1,54 @@
 import React from 'react';
 
 const Card = (props) => {
-    const {discovered, color, position, word} = props
+    const {turn, discovered, color, position, word, role, teamColor, guessPositions, setGuessPositions, nbOfGuess} = props;
+
+    const [imgSource, setImgSource] = React.useState("")
+    React.useEffect(() => {
+      setImgSource(() => {
+        let tmp;
+        ['red', 'blue'].includes(color) ? tmp = `${window.location.origin}/${color}_card_${Math.floor((Math.random()* 3) + 1)}.png`
+        : tmp = `${window.location.origin}/${color}_card.png`
+        return tmp
+      })
+    }, [color]);
+
+    React.useEffect(() => {
+      console.log(`teamcolor: ${teamColor} ,, turn: ${turn}, nbOfGuess, ${nbOfGuess}`)
+    }, [teamColor, turn, nbOfGuess]);
+
+    const handleClick = (e, position) => {
+      // if position already set, remove
+      e.preventDefault();
+      if (turn !== teamColor ) return;
+      let newPosition = [...guessPositions]
+      if (guessPositions.includes(position)) {
+        newPosition = newPosition.filter((oldPosition) => oldPosition !== position)
+      } else {
+        if (guessPositions.length === nbOfGuess) return;
+        newPosition.push(position)
+      }
+      setGuessPositions(newPosition)
+    }
+
     return (
-        <>
-        {discovered && <img 
-          src={`${color}_card.png`}
-          alt="" 
-        />}
-        <div className={`box-border cursor-pointer m-2 w-[12vw] h-[15vh] flex flex-col relative bg-orange-200 rounded text-gray-700 bold border-2 
-        ${color == 'red'? "border-red-700"
-        : color == 'blue'? "border-blue-700"
-        : color == 'white'? "border-gray-300"
-        : "border-black"}`}>
-          <div className="mt-[calc(15vh-36px-1rem)] h-30px bg-slate-300 justify-self-end">{word}</div>
+        <div onClick={(e) => handleClick(e, position)} className={``}>
+          <img 
+            src={imgSource}
+            className={` z-20 relative top-[calc(15vh+0.5rem)] w-[calc(12vw+1rem)] h-[15vh] ${!discovered ? "opacity-0" : ""}
+            ${turn === teamColor ? "cursor-pointer" : ""}`}
+            alt="" 
+          />
+          <div className={`box-border cursor-pointer m-2 w-[12vw] h-[15vh] flex flex-col relative bg-orange-200 rounded text-gray-700 bold border-4
+          ${turn !== teamColor && "cursor-pointer"}
+          ${guessPositions && guessPositions.includes(position) ? "border-lime-700" : ""}
+          ${color === 'red' && "red" === teamColor? "border-red-700"
+          : color === 'blue' && "blue" === teamColor? "border-blue-700"
+          : color === 'black'? "border-black"
+          : "border-gray-300"}`}>
+            <div className="text-center italic font-semi-bold mt-[calc(15vh-36px-1rem)] h-30px bg-slate-300 justify-self-end">{word}</div>
+          </div>
         </div>
-        </>
     );
 }
 

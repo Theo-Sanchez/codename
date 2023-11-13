@@ -9,7 +9,7 @@ NUMBER_OF_WORDS = 25
 def get_random_words() -> list:
     """ read from json list of words and pseudo randomly return 25 of them
     """
-    with open(f"{os.getcwd()}/backend/wordsList.json", "r", encoding='utf-8') as f:
+    with open(f"{os.getcwd()}/wordsList.json", "r", encoding='utf-8') as f:
         words_list = json.load(f)
 
     guess_list = []
@@ -40,26 +40,28 @@ def init_grid(size: int=5) -> list:
     } for i, elem in enumerate(color_list)]
 
 
-def handle_grid(grid: list, position: tuple, player_color: str, score: dict) -> list:
+def handle_grid(grid: list, positions: tuple, player_color: str) -> list:
     """ handler for grid object used whenever a socket is received.
     params:
      - grid(list): the grid of words
-     - position(tuple): x and y coordinates of chosen word
+     - positions(list): [{x: int, y: int}] coordinates of chosen words
      - player_color(str): color of the player who commit its choices
      - score:(str): 
     returns: new list with updated states
     """
-    x = position[0]
-    y = position[1]
-    case = grid[x*5 + y]
-    if (case.get("color")) == player_color:
-        score[player_color] += 1
-    elif case.get("color") == "black":
-        print('game should end') 
-    else:
-        print('should be white case or enemy coloured')
+    for position in positions:
+        x = position['x']
+        y = position['y']
+        case = grid[x*5 + y]
+        if (case.get("color")) == player_color:
+            print("match")
+        elif case.get("color") == "black":
+            print('game should end')
+            # break
+        else:
+            print('should be white case or enemy coloured')
 
-    case.update({"discovered": True})
+        case.update({"discovered": True})
     return grid
 
 
@@ -87,7 +89,7 @@ def handle_roles(clients: list, sid: str, addition: bool)-> tuple:
             "sid": sid
         }
         clients += [new_client]
-        return clients, new_client['role']
+        return clients, client_
     else:
         # handle game pause while len != 2
         # TODO-> send socket event with new number of players and wait

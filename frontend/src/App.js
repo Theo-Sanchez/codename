@@ -1,143 +1,22 @@
 import './App.css';
 import Card from './components/Card';
-import useSocket from './hooks/useSocket';
-import React, {useState} from 'react';
+import useSocket, {socketEventKeys} from './hooks/useSocket';
+import React, {useState, useEffect} from 'react';
 
-const grid = [
-  {
-    "discovered": false,
-    "word": "a1",
-    "color": "red"
-  },
-  {
-    "discovered": false,
-    "word": "b1",
-    "color": "white"
-  },
-  {
-    "discovered": false,
-    "word": "c1",
-    "color": "white"
-  },
-  {
-    "discovered": false,
-    "word": "d1",
-    "color": "red"
-  },
-  {
-    "discovered": false,
-    "word": "e1",
-    "color": "blue"
-  },
-  {
-    "discovered": false,
-    "word": "a2",
-    "color": "blue"
-  },
-  {
-    "discovered": false,
-    "word": "b2",
-    "color": "red"
-  },
-  {
-    "discovered": false,
-    "word": "c2",
-    "color": "red"
-  },
-  {
-    "discovered": false,
-    "word": "d2",
-    "color": "white"
-  },
-  {
-    "discovered": false,
-    "word": "e2",
-    "color": "red"
-  },
-  {
-    "discovered": false,
-    "word": "a3",
-    "color": "white"
-  },
-  {
-    "discovered": false,
-    "word": "b3",
-    "color": "blue"
-  },
-  {
-    "discovered": false,
-    "word": "c3",
-    "color": "blue"
-  },
-  {
-    "discovered": false,
-    "word": "d3",
-    "color": "blue"
-  },
-  {
-    "discovered": false,
-    "word": "e3",
-    "color": "blue"
-  },
-  {
-    "discovered": false,
-    "word": "a4",
-    "color": "white"
-  },
-  {
-    "discovered": false,
-    "word": "b4",
-    "color": "red"
-  },
-  {
-    "discovered": false,
-    "word": "c4",
-    "color": "red"
-  },
-  {
-    "discovered": false,
-    "word": "d4",
-    "color": "white"
-  },
-  {
-    "discovered": false,
-    "word": "e4",
-    "color": "white"
-  },
-  {
-    "discovered": false,
-    "word": "a5",
-    "color": "blue"
-  },
-  {
-    "discovered": false,
-    "word": "b5",
-    "color": "red"
-  },
-  {
-    "discovered": false,
-    "word": "c5",
-    "color": "white"
-  },
-  {
-    "discovered": false,
-    "word": "d5",
-    "color": "black"
-  },
-  {
-    "discovered": false,
-    "word": "e5",
-    "color": "blue"
-  }
-]
-
-const fiveByFive = (input, props) => {
-  if (input.length !== 25) return;
+const fiveByFive = (input, teamColor, props, guessPositions, setGuessPositions, turn, nbOfGuess) => {
+  if (input === undefined || input.length !== 25) return;
   const output = []
   for (let i=0; i<5; i++) {
     let tmp = []
     for (let j=0; j<5; j++) {
-      let properties = {position: i*5 + j}
+      let properties = {
+        setGuessPositions,
+        position: i*5 + j,
+        teamColor,
+        guessPositions,
+        turn,
+        nbOfGuess
+      }
       props.forEach((prop) => properties[prop] = input[i*5+j][prop]);
       tmp.push(<div>
         <Card {...properties} />
@@ -150,35 +29,87 @@ const fiveByFive = (input, props) => {
 
 function App() {
 
-  const { role, gameGrid, sendMessage } = useSocket();
-  console.log(role)
-  const [gridContent, _] = React.useState(() => fiveByFive(grid, ["discovered", "color", "word"]));
+  const { turn, teamColor, gameGrid, sendMessage, guessHelper } = useSocket();
   
-  const [numberOfWordsToGuess, setNumberOfWordsToGuess] = useState(0);
-  const [clue, setClue] = useState([]);
+  const [gridContent, setGridContent] = useState([])
+  const [numberOfWordsToGuess, setNumberOfWordsToGuess] = useState(1);
+  const [clue, setClue] = useState("");
+  const [guessPositions, setGuessPositions] = useState([]);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const [guessPosition, setGuessPosition] = useState([]);
-
-  const handleClick = (e, position) => {
-    setGuessPosition((position) => [position, ""])
-  }
   const handleHelpWordInput = (e) => {
-    setClue(e.target.value)
+    setClue(e.target.value);
   }
-  const handleSubmit = (e) => {
+  
+  const handleNbOfGuess = (addition=true) => {
+    if (addition) {
+      if (numberOfWordsToGuess >= 5) {
+        setErrorMsg((errorMsg) => {return {...errorMsg, "nbWords": "Maximum 5 words to guess by clue"}})
+        return;
+      }
+      setNumberOfWordsToGuess((nb) => nb + 1)
+      setErrorMsg((errorMsg) => {return {...errorMsg, "nbWords": ""}})
+    }
+    else {
+      if (numberOfWordsToGuess === 1) {
+        return
+      }
+      setNumberOfWordsToGuess((nb) => nb - 1)
+      setErrorMsg((errorMsg) => {return {...errorMsg, "nbWords": ""}})
+    }
+  }
+  const handleSubmitProposal = (e) => {
     e.preventDefault();
-    sendMessage(gameGrid, "team")
-    setGuessPosition([])
+    console.log("test guess position", guessPositions)
+    // setGuessPositions([]);
+    sendMessage(clue, teamColor, socketEventKeys.guess_client)
   }
+  const handleSubmitHelper = (e) => {
+    e.preventDefault();
+    if (clue.length === 0 ) return;
+    sendMessage({clue: clue, number_of_guess: numberOfWordsToGuess}, teamColor, socketEventKeys.emit_guess_helper)
+  }
+
+  useEffect(() => {
+    console.log("mounting");
+  }, [])
+  /**
+   * setClue("")
+    setNumberOfWordsToGuess(1);
+   */
+    
+
+  useEffect(()=> {
+    setGridContent(() => fiveByFive(gameGrid, teamColor, ["discovered", "color", "word"], guessPositions, setGuessPositions, turn, guessHelper.nbOfGuess))
+  }, [guessPositions, gameGrid, teamColor, turn, guessHelper.nbOfGuess])
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <div>{role}</div>
-        <div className="flex flex-col space-y-2 bg-blue-300">
+    <div className="w-full h-full bg-[#282c34] flex items-center flex-col justify-center">
+      {turn === teamColor ? 
+       guessHelper.clue === "" ? 
+        // <div className={`font-bold text-white text-lg text-center w-[40vw] h-[20vh] absolute left-[calc((100%-40vw)/2)] z-40 bg-[#282c34]`}>
+        //     <p className="my-auto">Waiting for your spy to set clue</p>
+        // </div>
+        <></>
+      : <div className="flex flex-col text-white">
+          <div className="flex flex-row">
+            <p className="font-semibold ">clue:</p>
+            <p className="ml-6 font-bold underline italic "> {guessHelper.clue} </p>
+          </div>
+          <div className="flex flex-row">
+            <p className="font-semibold ">number of words: </p>
+            <p className="ml-6 font-bold underline italic ">{guessHelper.nbOfGuess}</p>
+          </div>
+        </div>
+      :<></>
+      }
+      <div className="font-bold text-white self-center justify-self-start">{teamColor}</div>
+      <div className={`${turn === teamColor && guessHelper.clue === "" ? "blur-sm" : ""} flex flex-row max-h-[100vh] overflow-hidden`}>
+        <div className="rounded flex flex-col space-y-2 bg-blue-300">
           {gridContent && gridContent.map((rowContent, index) => {
           return (
-            <div key={index} className=" flex flex-row space-x-2">
-              {rowContent.map((cardContent, index_) => {
+            <div key={index} className="relative -top-[calc(15vh+0.5rem)] max-h-[calc(15vh+0.5rem)] flex flex-row space-x-2">
+              {rowContent && rowContent.map((cardContent, index_) => {
                 return(
                   <React.Fragment key={index_}>
                     {cardContent}
@@ -186,12 +117,45 @@ function App() {
                 )
               })}
             </div>
-          
           )}
         )}
         </div>
-          
-      </header>
+        </div>
+        {turn === teamColor && guessHelper.clue !== "" ? 
+         <button
+           onClick={(e) => handleSubmitProposal(e)}
+           className="box-border border-gray-500 rounded border-2"
+         >
+          Send proposal
+         </button>
+         : <></>
+        }
+        { turn !== teamColor && guessHelper.clue === "" ? 
+        <div className="mt-5 flex flex-row space-x-2 space-y-2"> 
+          <input
+          type="text"
+          value={clue}
+          onChange={handleHelpWordInput}
+          placeholder='type your clue here'
+          className="text-blue-700 h-[30px]"
+          />
+          <div className="flex flex-row m-0 p-0">
+          {errorMsg.nbWords && <p className="italic text-red-600">{errorMsg.nbWords}</p>}
+            <p>{numberOfWordsToGuess}</p>
+            <div className="flex flex-row space-x-4">
+              <button
+                onClick={() => handleNbOfGuess()}
+                className="box-border w-[24px] h-[24px] border-gray-500 rounded border-2"
+              >+</button>
+              <button
+                onClick={() => handleNbOfGuess(false)}
+                className="box-border w-[24px] h-[24px] border-gray-500 rounded border-2"
+              >-</button>
+              <button className={`${clue.length === 0 && "cursor-not-allowed"} box-borderborder-gray-500 rounded border-2`} onClick={handleSubmitHelper}>Submit choices</button>
+            </div>
+          </div>
+        </div>
+        : <></> }
     </div>
   );
 }
