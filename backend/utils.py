@@ -40,6 +40,10 @@ def init_grid(size: int=5) -> list:
     } for i, elem in enumerate(color_list)]
 
 
+def handle_positions(entries):
+    return [{"x": entry//5, "y": entry%5} for entry in entries]
+
+
 def handle_grid(grid: list, positions: tuple, player_color: str) -> list:
     """ handler for grid object used whenever a socket is received.
     params:
@@ -49,6 +53,10 @@ def handle_grid(grid: list, positions: tuple, player_color: str) -> list:
      - score:(str): 
     returns: new list with updated states
     """
+    enemy_color = get_any_other(TEAM_COLORS, player_color)
+    game_status = {
+        "status": "unknown"
+    }
     for position in positions:
         x = position['x']
         y = position['y']
@@ -57,12 +65,22 @@ def handle_grid(grid: list, positions: tuple, player_color: str) -> list:
             print("match")
         elif case.get("color") == "black":
             print('game should end')
-            # break
+            game_status.update({
+                "status": "end",
+                "winner": enemy_color
+            })
+            break
         else:
             print('should be white case or enemy coloured')
 
         case.update({"discovered": True})
-    return grid
+        if winner := handle_victory(grid):
+            game_status.update({
+                "status": "end",
+                "winner": winner
+            })
+            return grid, game_status
+    return grid, game_status
 
 
 def handle_roles(clients: list, sid: str, addition: bool)-> tuple:
@@ -101,3 +119,23 @@ def handle_roles(clients: list, sid: str, addition: bool)-> tuple:
 def get_any_other(input: tuple, already_took: str):
     """return next item not present in given tuple"""
     return next(elem for elem in input if elem != already_took)
+
+
+def handle_victory(grid):
+    print("grid", grid)
+    for color in TEAM_COLORS:
+        if not any(case['discovered'] == False and case['color'] == color for case in grid):
+            return color
+    return False
+
+
+grid_samples = [
+    init_grid(), 
+    init_grid(), 
+    init_grid(), 
+]
+
+
+if __name__ == '__main__':
+    for grid in grid_samples:
+        print(handle_victory(grid))

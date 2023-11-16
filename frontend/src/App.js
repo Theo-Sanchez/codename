@@ -29,13 +29,15 @@ const fiveByFive = (input, teamColor, props, guessPositions, setGuessPositions, 
 
 function App() {
 
-  const { turn, teamColor, gameGrid, sendMessage, guessHelper } = useSocket();
+  const { turn, teamColor, gameGrid, sendMessage, guessHelper, changeTurn } = useSocket();
   
   const [gridContent, setGridContent] = useState([])
   const [numberOfWordsToGuess, setNumberOfWordsToGuess] = useState(1);
   const [clue, setClue] = useState("");
   const [guessPositions, setGuessPositions] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const [nbOfPlayers, setnbOfPlayers] = useState(2)
 
   const handleHelpWordInput = (e) => {
     setClue(e.target.value);
@@ -62,7 +64,11 @@ function App() {
     e.preventDefault();
     console.log("test guess position", guessPositions)
     // setGuessPositions([]);
-    sendMessage(clue, teamColor, socketEventKeys.guess_client)
+    setNumberOfWordsToGuess(1);
+    setClue('');
+    changeTurn();
+    
+    sendMessage(guessPositions, teamColor, socketEventKeys.guess_client)
   }
   const handleSubmitHelper = (e) => {
     e.preventDefault();
@@ -84,13 +90,14 @@ function App() {
   }, [guessPositions, gameGrid, teamColor, turn, guessHelper.nbOfGuess])
 
   return (
-    <div className="w-full h-full bg-[#282c34] flex items-center flex-col justify-center">
+    <div className="w-full h-[100vh] bg-[#282c34] flex items-center flex-col justify-center">
       {turn === teamColor ? 
        guessHelper.clue === "" ? 
-        // <div className={`font-bold text-white text-lg text-center w-[40vw] h-[20vh] absolute left-[calc((100%-40vw)/2)] z-40 bg-[#282c34]`}>
-        //     <p className="my-auto">Waiting for your spy to set clue</p>
-        // </div>
-        <></>
+        <div className="absolute top-0 left-0 w-[100vw] h-[100vh] bg-transparent z-20">
+          <div className={`flex justify-center items-center font-bold text-white text-lg text-center w-[40vw] h-[20vh] absolute top-[calc((100%-20vh)/2)] left-[calc((100%-40vw)/2)] z-40 bg-[#282c34]`}>
+              <div className="">Waiting for {nbOfPlayers === 2 ? "other player" : "your spy"} to set clue</div>
+          </div>
+        </div>
       : <div className="flex flex-col text-white">
           <div className="flex flex-row">
             <p className="font-semibold ">clue:</p>
@@ -104,11 +111,11 @@ function App() {
       :<></>
       }
       <div className="font-bold text-white self-center justify-self-start">{teamColor}</div>
-      <div className={`${turn === teamColor && guessHelper.clue === "" ? "blur-sm" : ""} flex flex-row max-h-[100vh] overflow-hidden`}>
+      <div className={`${turn === teamColor && guessHelper.clue === "" ? "test_blur" : ""} flex flex-row max-h-[100vh] overflow-hidden`}>
         <div className="rounded flex flex-col space-y-2 bg-blue-300">
           {gridContent && gridContent.map((rowContent, index) => {
           return (
-            <div key={index} className="relative -top-[calc(15vh+0.5rem)] max-h-[calc(15vh+0.5rem)] flex flex-row space-x-2">
+            <div key={index} className="relative -top-[calc(12vh+0.5rem)] max-h-[calc(15vh+0.5rem)] flex flex-row space-x-2">
               {rowContent && rowContent.map((cardContent, index_) => {
                 return(
                   <React.Fragment key={index_}>
@@ -124,7 +131,7 @@ function App() {
         {turn === teamColor && guessHelper.clue !== "" ? 
          <button
            onClick={(e) => handleSubmitProposal(e)}
-           className="box-border border-gray-500 rounded border-2"
+           className="text-white font-bold box-border border-gray-500 rounded border-2"
          >
           Send proposal
          </button>

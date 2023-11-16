@@ -35,11 +35,11 @@ const Card = (props) => {
         <div onClick={(e) => handleClick(e, position)} className={``}>
           <img 
             src={imgSource}
-            className={` z-20 relative top-[calc(15vh+0.5rem)] w-[calc(12vw+1rem)] h-[15vh] ${!discovered ? "opacity-0" : ""}
+            className={` z-20 relative top-[calc(12vh+0.5rem)] w-[calc(10vw+1rem)] h-[12vh] ${!discovered ? "opacity-0" : ""}
             ${turn === teamColor ? "cursor-pointer" : ""}`}
             alt="" 
           />
-          <div className={`box-border cursor-pointer m-2 w-[12vw] h-[15vh] flex flex-col relative bg-orange-200 rounded text-gray-700 bold border-4
+          <div className={`box-border cursor-pointer m-2 w-[10vw] h-[12vh] flex flex-col relative bg-orange-200 rounded text-gray-700 bold border-4
           ${turn !== teamColor && "cursor-pointer"}
           ${guessPositions && guessPositions.includes(position) ? "border-lime-700" : ""}
           ${color === 'red' && "red" === teamColor? "border-red-700"

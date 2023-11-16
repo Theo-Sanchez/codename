@@ -23,17 +23,24 @@ const useSocket = () => {
   useEffect(() => {
     socketRef.current = socketIOClient(ENDPOINT);
     socketRef.current.emit("join"); // connect
-
     socketRef.current.on("log", (event) => {
       console.log("log", event)
       setTeamColor(event.team_color);
       setGameGrid(event.grid);
     });
-
+    socketRef.current.on("new_game_server", (event) => {
+      setGameGrid(event.grid);
+    })
     socketRef.current.on(socketEventKeys.receive_response, (event) => {
       // handle guess response
-      console.log("test_receive_event grid", event.grid)
+      console.log("test_guess_from_server grid", event.grid)
       setGameGrid(event.grid);
+      setGuessHelper({
+        clue: "",
+        nbOfGuess: 0,
+      });
+    });
+    socketRef.current.on("change_turn_server", () => {
       setTurn((turn) => turn === "red" ? "blue" : "red");
     });
     
@@ -41,8 +48,8 @@ const useSocket = () => {
       // handle submission of helper
       console.log("test_receive_event helper", event)
       setGuessHelper({
-        clue: event.data.clue,
-        nbOfGuess: event.data.number_of_guess
+        clue: event.clue,
+        nbOfGuess: event.number_of_guess
       });
     });
 
@@ -57,13 +64,17 @@ const useSocket = () => {
       teamColor: teamColor,
     });
   }
+  const changeTurn = () => {
+    socketRef.current.emit("change_turn_client");
+  }
 
   return {
     turn,
     teamColor,
     gameGrid,
     sendMessage,
-    guessHelper
+    guessHelper,
+    changeTurn
   };
 };
 
