@@ -13,14 +13,10 @@ const Card = (props) => {
       })
     }, [color]);
 
-    React.useEffect(() => {
-      console.log(`teamcolor: ${teamColor} ,, turn: ${turn}, nbOfGuess, ${nbOfGuess}`)
-    }, [teamColor, turn, nbOfGuess]);
-
     const handleClick = (e, position) => {
       // if position already set, remove
       e.preventDefault();
-      if (turn !== teamColor ) return;
+      if (turn !== teamColor || discovered) return;
       let newPosition = [...guessPositions]
       if (guessPositions.includes(position)) {
         newPosition = newPosition.filter((oldPosition) => oldPosition !== position)
@@ -36,16 +32,17 @@ const Card = (props) => {
           <img 
             src={imgSource}
             className={` z-20 relative top-[calc(12vh+0.5rem)] w-[calc(10vw+1rem)] h-[12vh] ${!discovered ? "opacity-0" : ""}
-            ${turn === teamColor ? "cursor-pointer" : ""}`}
+            ${turn === teamColor && !discovered? "cursor-pointer" : ""}`}
             alt="" 
           />
           <div className={`box-border cursor-pointer m-2 w-[10vw] h-[12vh] flex flex-col relative bg-orange-200 rounded text-gray-700 bold border-4
-          ${turn !== teamColor && "cursor-pointer"}
-          ${guessPositions && guessPositions.includes(position) ? "border-lime-700" : ""}
-          ${color === 'red' && "red" === teamColor? "border-red-700"
-          : color === 'blue' && "blue" === teamColor? "border-blue-700"
-          : color === 'black'? "border-black"
-          : "border-gray-300"}`}>
+          ${turn !== teamColor && discovered && "cursor-pointer"}
+          ${guessPositions && guessPositions.includes(position) ? "border-lime-700" : 
+            color === 'red' && "red" === teamColor? "border-red-700"
+            : color === 'blue' && "blue" === teamColor? "border-blue-700"
+            : color === 'black'? "border-black"
+            : "border-gray-300"}`}
+          >
             <div className="text-center italic font-semi-bold mt-[calc(15vh-36px-1rem)] h-30px bg-slate-300 justify-self-end">{word}</div>
           </div>
         </div>

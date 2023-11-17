@@ -40,9 +40,6 @@ def init_grid(size: int=5) -> list:
     } for i, elem in enumerate(color_list)]
 
 
-def handle_positions(entries):
-    return [{"x": entry//5, "y": entry%5} for entry in entries]
-
 
 def handle_grid(grid: list, positions: tuple, player_color: str) -> list:
     """ handler for grid object used whenever a socket is received.
@@ -51,30 +48,15 @@ def handle_grid(grid: list, positions: tuple, player_color: str) -> list:
      - positions(list): [{x: int, y: int}] coordinates of chosen words
      - player_color(str): color of the player who commit its choices
      - score:(str): 
-    returns: new list with updated states
+    returns: new list with updated states and game_status that state if game should be over
     """
-    enemy_color = get_any_other(TEAM_COLORS, player_color)
     game_status = {
         "status": "unknown"
     }
     for position in positions:
-        x = position['x']
-        y = position['y']
-        case = grid[x*5 + y]
-        if (case.get("color")) == player_color:
-            print("match")
-        elif case.get("color") == "black":
-            print('game should end')
-            game_status.update({
-                "status": "end",
-                "winner": enemy_color
-            })
-            break
-        else:
-            print('should be white case or enemy coloured')
-
+        case = grid[position]
         case.update({"discovered": True})
-        if winner := handle_victory(grid):
+        if winner := handle_victory(grid, case.get("color") == "black", player_color):
             game_status.update({
                 "status": "end",
                 "winner": winner
@@ -121,8 +103,9 @@ def get_any_other(input: tuple, already_took: str):
     return next(elem for elem in input if elem != already_took)
 
 
-def handle_victory(grid):
-    print("grid", grid)
+def handle_victory(grid, is_mine_case, player_color):
+    if is_mine_case:
+        return get_any_other(TEAM_COLORS, player_color)
     for color in TEAM_COLORS:
         if not any(case['discovered'] == False and case['color'] == color for case in grid):
             return color

@@ -1,9 +1,7 @@
 from flask import Flask, request
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
-from utils import init_grid, handle_grid, handle_roles, handle_positions
-import random
-from pprint import pprint
+from utils import init_grid, handle_grid, handle_roles
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000")
@@ -12,31 +10,11 @@ CORS(app)
 clients = []
 
 grid_instance = init_grid()
+game_status = {
+    "status": "run",
+    "winner": ""
+}
 score = {"blue": 0, "red": 0}
-
-# for i, params in enumerate([
-#     {
-#         "grid": grid_instance,
-#         "position": tuple(random.randint(0, 4) for _ in range(2)),
-#         "player_color": "red",
-#         "score": score
-#     },
-#     {
-#         "grid": grid_instance,
-#         "position": tuple(random.randint(0, 4) for _ in range(2)),
-#         "player_color": "blue",
-#         "score": score
-#     },
-#     {
-#         "grid": grid_instance,
-#         "position": tuple(random.randint(0, 4) for _ in range(2)),
-#         "player_color": "red",
-#         "score": score
-#     },
-# ]):
-#     grid_instance, score = handle_grid(**params)
-#     pprint(grid_instance, indent=2)
-#     pprint(score, indent=2)
 
 @app.route("/")
 def hello_world():
@@ -47,13 +25,13 @@ def hello_world():
 def on_connect():
     try:
         global clients
+        global game_status
         sid = request.sid
-        print(sid, "in log")
         clients, new_client = handle_roles(clients, sid, addition=True)
         print(f'Client with sid {sid} connected', clients)
         emit('log', {
-            'message': f'Connected as spy',
             "grid": grid_instance,
+            "game_status": game_status,
             "team_color": new_client['team_color'],
             "role": new_client['role']
         })
@@ -77,13 +55,14 @@ def handle_turn_client():
 def handle_change_list_event(json):
     print("received grid event", json)
     global grid_instance
+    global game_status
     grid_instance, game_status = handle_grid(
         grid=grid_instance,
-        positions=handle_positions(json['data']), # need transform positions
+        positions=json['data'],
         player_color=json['teamColor']
     )
-    if game_status['status'] == "ending":
-        emit('end_game_server', {"grid": grid_instance, "winner": game_status['winner']}, broadcast=True)
+    if game_status['status'] == "end":
+        emit('end_game_server', {"grid": grid_instance, "game_status": game_status}, broadcast=True)
         return
     emit('guess_from_server', {"grid": grid_instance}, broadcast=True)
 
@@ -100,9 +79,17 @@ def handle_end_game_event(json):
     emit('end_game_server', json)
 
 @socketio.on('new_game_client')
-def on_new_game():
+def on_new_game(_):
     # handle new_grid mechanics
+    print('new game event received from client')
     global grid_instance
+    global game_status
     grid_instance = init_grid();
-    emit('new_game_server', {"grid": grid_instance}, broadcast=True)
+    game_status = {
+        "status": "run",
+        "winner": ""
+    }
+    emit('new_game_server', {"grid": grid_instance, "game_status": game_status}, broadcast=True)
+    # no changing team for now.. should we?
+    # what about clues, is it correctly reset?
     pass

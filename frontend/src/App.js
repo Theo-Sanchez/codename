@@ -3,7 +3,7 @@ import Card from './components/Card';
 import useSocket, {socketEventKeys} from './hooks/useSocket';
 import React, {useState, useEffect} from 'react';
 
-const fiveByFive = (input, teamColor, props, guessPositions, setGuessPositions, turn, nbOfGuess) => {
+const makeGrid = (input, teamColor, props, guessPositions, setGuessPositions, turn, nbOfGuess) => {
   if (input === undefined || input.length !== 25) return;
   const output = []
   for (let i=0; i<5; i++) {
@@ -29,17 +29,17 @@ const fiveByFive = (input, teamColor, props, guessPositions, setGuessPositions, 
 
 function App() {
 
-  const { turn, teamColor, gameGrid, sendMessage, guessHelper, changeTurn } = useSocket();
+  const { turn, teamColor, gameGrid, sendMessage, guessHelper, changeTurn, gameStatus } = useSocket();
   
   const [gridContent, setGridContent] = useState([])
   const [numberOfWordsToGuess, setNumberOfWordsToGuess] = useState(1);
   const [clue, setClue] = useState("");
   const [guessPositions, setGuessPositions] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
-
-  const [nbOfPlayers, setnbOfPlayers] = useState(2)
+  const [nbOfPlayers, setnbOfPlayers] = useState(2);
 
   const handleHelpWordInput = (e) => {
+    console.log("value changing");
     setClue(e.target.value);
   }
   
@@ -62,42 +62,52 @@ function App() {
   }
   const handleSubmitProposal = (e) => {
     e.preventDefault();
-    console.log("test guess position", guessPositions)
-    // setGuessPositions([]);
+    setGuessPositions([]);
     setNumberOfWordsToGuess(1);
     setClue('');
     changeTurn();
-    
     sendMessage(guessPositions, teamColor, socketEventKeys.guess_client)
   }
+  const restartGame  = () => {
+    console.log("restarting game");
+    setGuessPositions([]);
+    setNumberOfWordsToGuess(1);
+    setClue('');
+    sendMessage({}, teamColor, "new_game_client")
+  };
+
   const handleSubmitHelper = (e) => {
     e.preventDefault();
     if (clue.length === 0 ) return;
     sendMessage({clue: clue, number_of_guess: numberOfWordsToGuess}, teamColor, socketEventKeys.emit_guess_helper)
-  }
-
-  useEffect(() => {
-    console.log("mounting");
-  }, [])
-  /**
-   * setClue("")
-    setNumberOfWordsToGuess(1);
-   */
+  };
     
 
   useEffect(()=> {
-    setGridContent(() => fiveByFive(gameGrid, teamColor, ["discovered", "color", "word"], guessPositions, setGuessPositions, turn, guessHelper.nbOfGuess))
+    setGridContent(() => makeGrid(gameGrid, teamColor, ["discovered", "color", "word"], guessPositions, setGuessPositions, turn, guessHelper.nbOfGuess))
   }, [guessPositions, gameGrid, teamColor, turn, guessHelper.nbOfGuess])
 
   return (
     <div className="w-full h-[100vh] bg-[#282c34] flex items-center flex-col justify-center">
+      {gameStatus.status === 'end' && 
+        <div className="absolute top-0 left-0 w-[100vw] h-[100vh] bg-transparent z-40">
+          <div className={`flex justify-center items-center flex-col font-bold text-white text-lg text-center w-[40vw] h-[20vh] absolute top-[calc((100%-20vh)/2)] left-[calc((100%-40vw)/2)] z-40 bg-[#282c34]`}>
+              <div className="">{gameStatus.winner === teamColor ? "Your team won" : "Enemy team won"}</div>
+              <button
+                className="border-2 rounded border-gray-400"
+                onClick={restartGame}
+              >Restart the game</button>
+          </div>
+        </div>}
+
       {turn === teamColor ? 
        guessHelper.clue === "" ? 
         <div className="absolute top-0 left-0 w-[100vw] h-[100vh] bg-transparent z-20">
           <div className={`flex justify-center items-center font-bold text-white text-lg text-center w-[40vw] h-[20vh] absolute top-[calc((100%-20vh)/2)] left-[calc((100%-40vw)/2)] z-40 bg-[#282c34]`}>
               <div className="">Waiting for {nbOfPlayers === 2 ? "other player" : "your spy"} to set clue</div>
           </div>
-        </div>
+        </div> 
+        
       : <div className="flex flex-col text-white">
           <div className="flex flex-row">
             <p className="font-semibold ">clue:</p>
@@ -111,7 +121,7 @@ function App() {
       :<></>
       }
       <div className="font-bold text-white self-center justify-self-start">{teamColor}</div>
-      <div className={`${turn === teamColor && guessHelper.clue === "" ? "test_blur" : ""} flex flex-row max-h-[100vh] overflow-hidden`}>
+      <div className={`${(turn === teamColor && guessHelper.clue === "") || gameStatus.status === 'end' ? "test_blur" : ""} flex flex-row max-h-[100vh] overflow-hidden`}>
         <div className="rounded flex flex-col space-y-2 bg-blue-300">
           {gridContent && gridContent.map((rowContent, index) => {
           return (
@@ -140,6 +150,7 @@ function App() {
         { turn !== teamColor && guessHelper.clue === "" ? 
         <div className="mt-5 flex flex-row space-x-2 space-y-2"> 
           <input
+          // ref={clueRef}
           type="text"
           value={clue}
           onChange={handleHelpWordInput}

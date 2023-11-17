@@ -9,14 +9,23 @@ export const socketEventKeys = {
   "receive_guess_helper": "helper_from_server",
 }
 const ENDPOINT = "http://localhost:5000";
-
-const useSocket = () => {
-  const [gameGrid, setGameGrid] = useState([])
-  const [turn, setTurn] = useState('red')
-  const [guessHelper, setGuessHelper] = useState({
+const initStates = {
+  gameStatus: {
+    winner: "",
+    status: "run"
+  },
+  turn: "red",
+  guessHelper : {
     clue: "",
     nbOfGuess: 0,
-  })
+  }
+}
+const useSocket = () => {
+  const [gameGrid, setGameGrid] = useState([])
+  // handle waiting room withing gameStatus['status'] == "waiting"
+  const [gameStatus, setGameStatus] = useState(initStates.gameStatus)
+  const [turn, setTurn] = useState(initStates.turn)
+  const [guessHelper, setGuessHelper] = useState(initStates.guessHelper)
   const [teamColor, setTeamColor] = useState()
   const socketRef = useRef();
 
@@ -24,29 +33,30 @@ const useSocket = () => {
     socketRef.current = socketIOClient(ENDPOINT);
     socketRef.current.emit("join"); // connect
     socketRef.current.on("log", (event) => {
-      console.log("log", event)
       setTeamColor(event.team_color);
       setGameGrid(event.grid);
+      setGameStatus(event.game_status);
     });
     socketRef.current.on("new_game_server", (event) => {
       setGameGrid(event.grid);
+      setGameStatus(initStates.gameStatus);
+      setGuessHelper(initStates.guessHelper);
+      setTurn(initStates.turn);
     })
-    socketRef.current.on(socketEventKeys.receive_response, (event) => {
-      // handle guess response
-      console.log("test_guess_from_server grid", event.grid)
+    socketRef.current.on("end_game_server", (event) => {
       setGameGrid(event.grid);
-      setGuessHelper({
-        clue: "",
-        nbOfGuess: 0,
-      });
+      setGameStatus(event.game_status)
+    })
+    
+    socketRef.current.on(socketEventKeys.receive_response, (event) => {
+      setGameGrid(event.grid);
+      setGuessHelper(initStates.guessHelper);
     });
     socketRef.current.on("change_turn_server", () => {
       setTurn((turn) => turn === "red" ? "blue" : "red");
     });
     
     socketRef.current.on(socketEventKeys.receive_guess_helper, (event) => {
-      // handle submission of helper
-      console.log("test_receive_event helper", event)
       setGuessHelper({
         clue: event.clue,
         nbOfGuess: event.number_of_guess
@@ -74,7 +84,8 @@ const useSocket = () => {
     gameGrid,
     sendMessage,
     guessHelper,
-    changeTurn
+    changeTurn,
+    gameStatus
   };
 };
 
