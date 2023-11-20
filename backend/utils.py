@@ -22,17 +22,19 @@ def get_random_words() -> list:
     return guess_list
 
 
-def init_grid(size: int=5) -> list:
+def init_grid(number_of_players: int=4, size: int=5) -> list:
     """ init the grid game using random list of words and associate them to teams
     """
     words = get_random_words()
     MINE_CASES = 1
-    COLORED_CASES = 16
+    COLORED_CASES = 15
     FILLED_CASES = int(size*size - (MINE_CASES + COLORED_CASES))
-    
-    color_list = ["black"] * MINE_CASES + ["blue"] * int(COLORED_CASES / 2) + ["red"] * int(COLORED_CASES / 2) + ["white"] * FILLED_CASES
+    if number_of_players == 2:
+        # need to create 2 grids for this case to possibly have same cells with two colors
+        color_list = ["black_red"] * MINE_CASES + ["black_blue"] * MINE_CASES + ["blue"] * int((COLORED_CASES + 1) // 2) + ["red"] * int(COLORED_CASES / 2) + ["white"] * (FILLED_CASES - 1)
+    else:
+        color_list = ["black"] * MINE_CASES + ["blue"] * int((COLORED_CASES + 1) // 2) + ["red"] * int(COLORED_CASES / 2) + ["white"] * FILLED_CASES
     random.shuffle(color_list)
-
     return [{
         "discovered": False,
         "word": words[i],
@@ -51,12 +53,12 @@ def handle_grid(grid: list, positions: tuple, player_color: str) -> list:
     returns: new list with updated states and game_status that state if game should be over
     """
     game_status = {
-        "status": "unknown"
+        "status": "run"
     }
     for position in positions:
         case = grid[position]
         case.update({"discovered": True})
-        if winner := handle_victory(grid, case.get("color") == "black", player_color):
+        if winner := handle_victory(grid, case.get("color") == f"black_{get_any_other(TEAM_COLORS, player_color)}", player_color):
             game_status.update({
                 "status": "end",
                 "winner": winner
@@ -110,15 +112,3 @@ def handle_victory(grid, is_mine_case, player_color):
         if not any(case['discovered'] == False and case['color'] == color for case in grid):
             return color
     return False
-
-
-grid_samples = [
-    init_grid(), 
-    init_grid(), 
-    init_grid(), 
-]
-
-
-if __name__ == '__main__':
-    for grid in grid_samples:
-        print(handle_victory(grid))

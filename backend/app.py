@@ -9,12 +9,11 @@ CORS(app)
 
 clients = []
 
-grid_instance = init_grid()
+grid_instance = init_grid(number_of_players=2) # this should be in start_game event
 game_status = {
     "status": "run",
     "winner": ""
 }
-score = {"blue": 0, "red": 0}
 
 @app.route("/")
 def hello_world():
@@ -30,11 +29,15 @@ def on_connect():
         clients, new_client = handle_roles(clients, sid, addition=True)
         print(f'Client with sid {sid} connected', clients)
         emit('log', {
-            "grid": grid_instance,
             "game_status": game_status,
             "team_color": new_client['team_color'],
             "role": new_client['role']
         })
+        emit('new_player', {
+            "grid": grid_instance if len(clients) >= 2 else "",
+            "game_status": game_status,
+            "number_of_clients": len(clients)
+        }, broadcast=True)
     except Exception as e:
         print('exception', e)
         
@@ -42,7 +45,6 @@ def on_connect():
 @socketio.on('disconnect')
 def on_disconnect():
     global clients
-    print(request.sid, "in log out")
     clients, _ = handle_roles(clients, request.sid, addition=False)
     print(f'Client with sid {request.sid} disconnected', clients)
 
@@ -53,7 +55,6 @@ def handle_turn_client():
 
 @socketio.on('guess_from_client')
 def handle_change_list_event(json):
-    print("received grid event", json)
     global grid_instance
     global game_status
     grid_instance, game_status = handle_grid(
@@ -69,7 +70,6 @@ def handle_change_list_event(json):
 
 @socketio.on('helper_from_client')
 def handle_guess_word_event(json):
-    print("received guess help", json)
     emit('helper_from_server', json['data'], broadcast=True)
 
 
